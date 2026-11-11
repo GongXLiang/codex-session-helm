@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "assessment": {
+    "ambiguity": 1,
+    "coupling": 1,
+    "consequence": 0,
+    "verification": 0,
+    "kind": "general"
+  },
+  "models": [
+    {"id": "gpt-6-luna", "roles": ["focused"], "efforts": ["low", "medium", "high", "xhigh", "max"], "baseline_effort": "high"},
+    {"id": "gpt-6.1-sol", "roles": ["general"], "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"], "baseline_effort": "medium"},
+    {"id": "gpt-6-astra", "roles": ["deep"], "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"], "baseline_effort": "low"},
+    {"id": "gpt-6.1-terra", "roles": ["visual"], "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"], "baseline_effort": "medium"}
+  ],
+  "default_model": null,
+  "model_policy": "explicit_only",
+  "thinking_allowed": true,
+  "mode": "auto",
+  "user_model": null,
+  "user_effort": null,
+  "allowed_model_ids": null,
+  "max_auto_effort": "high"
+}
