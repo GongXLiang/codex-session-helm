@@ -1,0 +1,31 @@
+Create a photorealistic editorial still-life photograph for a wide README banner of a developer tool that coordinates work across separate sessions. The image must contain no text of any kind.
+
+FORMAT
+- Output a wide 3:1 landscape image, ideally 1536 by 512. Keep every object inside this image with at least 8% margin above and below; do not crop any object.
+- Reserve the left 45% of the frame for a title that will be added later: only bare, evenly lit surface there, with no objects, props, cast shadows, or texture changes.
+- Place the whole arrangement in the right 55% of the frame, with generous, even spacing and calm empty space between objects.
+
+SCENE
+- Surface: matte charcoal stone with a very fine, even grain; neutral graphite tone (about #1F1F20 to #2A2A2B); seamless.
+- Camera: high-angle three-quarter view, about 55 degrees above the surface, natural 90 mm lens perspective; everything in sharp focus except a slight softening at the far edge. All objects share one orientation, rotated about 15 degrees clockwise relative to the frame, so their top edges run gently downhill to the right.
+
+OBJECTS (exactly these, nothing else)
+1. Supervisor board, at the left of the arrangement: a slim board of dark graphite anodized aluminum with a crisp chamfered edge, raised a few millimeters on hidden spacers so it casts a thin, soft shadow. On it lies a warm off-white planning sheet (#ECE8DF) with faint ruled lines, a short column of small empty square checkboxes, and a thin bracket in the margin. Abstract marks only.
+2. Returned report: a smaller off-white sheet laid over the lower-right corner of the planning sheet, on the board. It has faint ruled lines and, near its top-right corner, a small circular blind-embossed seal containing a clean check mark filled with matte, muted teal ink (#3F9A8C), with no glow. This check mark is the strongest color accent in the image.
+3. Exactly three working trays, to the right of the board: shallow, thin-walled trays of satin-finished mid-gray aluminum with softly rounded inner corners, arranged in a gently staggered diagonal row that recedes to the right. Each tray stands alone with clear empty surface around it; the trays never touch or overlap each other or the board. Each tray holds one off-white index card with faint ruled lines and a small muted-teal tab on its top edge; the cards sit at slightly different angles, as if each one is worked on independently.
+
+LIGHT AND COLOR
+- Soft directional daylight from the upper left, neutral white balance (about 5000 K), long gentle shadows toward the lower right, subtle highlights along the aluminum edges, visible fine paper texture, deep but not crushed shadows. The empty left area falls off smoothly into an even dark tone.
+- Palette limited to charcoal graphite, warm off-white paper, satin aluminum grays (#8E8B85 to #B8B4AC), and one muted teal (#3F9A8C) used only on the card tabs and the check mark.
+- Mood: calm, exact, professional, quietly premium, like a product photograph for a carefully made tool.
+
+AVOID
+- Any text, letters, numbers, words, logos, labels, signatures, watermarks, or pseudo-handwriting on any surface; every paper mark is a plain line or an empty box.
+- Stamps or words such as "APPROVED" or "OK"; the acceptance mark is only an embossed check.
+- Screens, monitors, laptops, phones, user interfaces, app windows, screenshots, or charts on screens.
+- Robots, mascots, faces, people, or hands.
+- Ship's wheels, helms, compasses, anchors, ropes, or any nautical motif.
+- Glowing orbs, light beams, neon, holograms, particles, sparkles, lens flares, circuit patterns, network constellations, or abstract "AI" imagery.
+- Purple, violet, magenta, or electric-blue light or tint; colored gradients in the background.
+- Extra props: pens, pencils, paper clips, staplers, coffee cups, plants, books, keyboards, or extra stacks of paper.
+- Floating or levitating objects (other than the board's few-millimeter lift on hidden spacers), tilt-shift miniature look, heavy vignette, glossy CGI look, cartoon, illustration, isometric-icon, or low-poly styles.

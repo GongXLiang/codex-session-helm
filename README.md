@@ -1,28 +1,33 @@
-# SessionHelm（会话领航）
+<p align="center"><img src="assets/readme/hero-zh.jpg" width="100%" alt="SessionHelm（会话领航）— 规划 · 派发 · 验收"></p>
+
+<p align="center"><b>简体中文</b> · <a href="README.en.md">English</a></p>
+
+**SessionHelm（会话领航）** 为 Codex 桌面多会话协作提供一套工作规则：主管规划、派发并独立验收，执行者在可单独查看和接管的对话中完成任务。适合研究、写作、绘图和代码项目；简单工作仍留在当前会话。
+
+把主管对话置顶，执行对话集中分组；随时打开某项任务，查看进度、继续追问或直接接管。
 
 <p align="center">
-  <img src="assets/readme/hero.svg" width="100%" alt="侧栏布局示意：论文修订主管对话置顶，T01 核对正文、T02 修订图表、T03 汇总检查集中在执行会话分组。非 Codex 真实截图。">
+  <a href="assets/readme/desktop-demo.png"><img src="assets/readme/desktop-demo.png" width="100%" alt="真实演示：左侧为 Codex 模式中置顶的演示主管和 T01、T02 执行会话，右侧为主管读取两份报告后分别验收的结果。"></a>
 </p>
 
-**Plan, delegate, and review across Codex desktop sessions.**
+<p align="center"><sub>Windows · ChatGPT 桌面端 Codex 模式 · 2026-11-11 实拍。侧栏与验收回报为同次演示的局部截图并排，界面文字未改写；点击可查看原尺寸。侧栏分组用于组织会话，不代表原生嵌套。</sub></p>
 
-SessionHelm 为 Codex 桌面多会话协作提供一套工作规则：主管规划、派发并独立验收，执行者在可单独查看和接管的对话中完成任务。适合研究、写作、绘图和代码项目；简单工作仍留在当前会话。
-
-把主管对话置顶，执行对话集中分组；随时打开某项任务，查看进度或直接接管。上图是侧栏布局示意，分组不表示原生父子关系或自动折叠。
-
-设计灵感来自 Claude Code 的嵌套会话（nested sessions）协作思路，相关背景可参阅[官方桌面跨会话文档](https://code.claude.com/docs/en/desktop#work-across-sessions)。SessionHelm 在 Codex 桌面中借鉴这种主管与独立执行会话的协作方式，落实为任务卡、侧栏组织、回报和验收规则；不宣称完整复刻 Claude 的原生嵌套界面或生命周期。
+这次公开演示实际创建了两个独立执行会话：T01 找出示例正文中的状态矛盾，T02 找出清单中遗漏的验收步骤。两份报告返回后，主管逐项核对输入与建议，分别记录验收结论；示例输入保持原样。
 
 [快速开始](#快速开始) · [看一个例子](#看一个例子) · [模型选择](#模型与思考强度) · [使用边界](#兼容性与边界) · [MIT License](LICENSE)
 
 ## 看一个例子
 
-一次文档审阅有五项任务。输入范围通过验收后，正文和图表可以并行核对；汇总必须等两项都验收通过。缺少原件的附录继续等待，不阻塞其他独立工作。
+下面是另一组五项任务的静态示例，用来说明依赖关系：输入范围通过验收后，正文和图表可以并行核对；汇总必须等两项都验收通过。缺少原件的附录继续等待，不阻塞其他独立工作。
 
 <p align="center">
-  <img src="assets/readme/workflow.svg" width="100%" alt="五任务示例：T01 已验收，T02 与 T03 可派发，T04 等待两项验收，T05 依赖 T01 但仍缺少原件。">
+  <a href="assets/readme/flow-wide-zh.png"><picture>
+    <source media="(max-width: 560px)" srcset="assets/readme/flow-narrow-zh.png">
+    <img src="assets/readme/flow-wide-zh.png" width="100%" alt="五项任务示例：T01 确认输入范围（v1，已验收）放行 T02 核对正文、T03 核对图表和 T05 补充附录；T02、T03 可派发；T04 汇总验收待 T02、T03 验收；T05 待作者原件。">
+  </picture></a>
 </p>
 
-这张图来自仓库的[虚构示例状态](examples/demo-state.json)，与[检查器生成的看板](examples/demo-board.md)一致，是静态说明。当前看板输出为 Markdown 表格和 Mermaid 依赖图，尚未接入 Visualize 自动刷新。
+插图依据[虚构示例状态](examples/demo-state.json)绘制，与 `helm.py board` 生成的[完整看板](examples/demo-board.md)及可派发检查一致。实线表示上游已验收，虚线表示仍待上游验收；T05 的前置虽已满足，但仍缺作者原件。这是静态示例，不随会话刷新；工具实际输出仍为 Markdown 表格和 Mermaid。
 
 ## 协作怎样推进
 
@@ -33,16 +38,27 @@ SessionHelm 为 Codex 桌面多会话协作提供一套工作规则：主管规�
 
 计划、状态和报告保存在项目中，支持主管交接与检查点恢复。消息按真实会话 ID 路由，侧栏分组只负责显示组织。SessionHelm 提供规则、模板和可选检查器，通过宿主原生工具执行，不附带编排服务器。
 
-## 与子代理怎样分工
+## 子代理与嵌套会话有什么区别
 
-独立执行会话的优势在于便于用户持续跟进：每项任务都有侧栏入口和自己的对话记录，可以单独继续、多轮返工，也可以由你直接接管。主管置顶、执行者集中分组后，长期项目更容易按任务查找进展与交付物。
+子代理（sub-agents）是主会话委派出去的工作单元；嵌套会话（nested sessions）把具体任务放进可独立访问的会话，由主管统筹。两者都能分工、并行处理任务，也都可能拥有独立上下文；关键区别在于用户如何进入执行过程，以及任务如何持续管理。
 
-| 工作场景 | 建议方式 |
-| --- | --- |
-| 长期工作、多轮修订、独立交付，需要随时打开或接管 | 独立执行会话，由主管统一验收与衔接 |
-| 当前主管回合内的短期并行检索、局部分析或复核 | 子代理，在已授权范围内协助主管 |
+| 对比维度 | 子代理（sub-agents） | SessionHelm 的嵌套式会话工作流 |
+| --- | --- | --- |
+| 工作入口 | 从主会话发起委派，结果回到主会话 | 主管与执行者都是独立桌面对话，执行者有侧栏入口 |
+| 用户参与 | 通常经主会话查看结果；检查、干预能力取决于宿主 | 用户可直接打开执行会话，追问、修订或接管 |
+| 上下文与续接 | 可有独立上下文；部分类型支持保留历史并续接 | 执行会话保留自己的讨论，任务卡和报告支持跨回合推进 |
+| 交付与验收 | 主会话消费委派结果；不自动提供项目级验收流程 | 分别记录执行完成、报告就绪和主管验收，依赖绑定已验收版本 |
+| 适合的工作 | 当前任务中的检索、分析、局部实现与复核 | 多轮修订、独立交付、需要用户持续跟进的长期任务 |
 
-两种方式可以配合使用。具体上下文保留、恢复与可见性取决于宿主能力；这里比较的是本项目的组织方式与使用场景。
+SessionHelm 借鉴 nested sessions 的组织方式，通过桌面原生工具创建独立会话、发送任务与回报，再用侧栏分组组织它们。它不把分组变成宿主原生父子关系，也不自动提供文件隔离、级联停止或退出后持续运行。
+
+两种方式可以配合使用：主管用独立会话管理长期任务，每个会话再在授权范围内使用子代理处理局部工作。子代理并非都不可续接，也并非都对用户不可见；实际能力以宿主和代理类型为准。相关概念可对照 Claude Code 官方的[子代理说明](https://code.claude.com/docs/en/sub-agents)和[桌面跨会话协作](https://code.claude.com/docs/en/desktop#work-across-sessions)。
+
+<p align="center">
+  <a href="assets/readme/executor-report.png"><img src="assets/readme/executor-report.png" width="100%" alt="T01 独立执行会话实拍：任务由另一个聊天发送，执行者找到正文矛盾、提交报告并向主管回报，明确标记执行完成、待主管验收。"></a>
+</p>
+
+<p align="center"><sub>同次演示中的 T01 执行会话局部：任务从主管发来，报告留在独立会话中。这张回报记录的是执行完成时的状态；上方桌面截图展示后续主管验收。</sub></p>
 
 ## 快速开始
 
@@ -93,6 +109,8 @@ python scripts/helm.py board examples/demo-state.json --output examples/demo-boa
 工具只提供检查与建议，不派发任务、不修改权威状态、不替主管验收。实际使用时换成项目自己的状态文件，只维护一个权威入口；生成看板不会让旧状态自动变新。详见[状态与看板](references/状态与看板.md)。
 
 ## 兼容性与边界
+
+设计灵感来自 Claude Code 的嵌套会话（nested sessions）协作思路，相关背景可参阅[官方桌面跨会话文档](https://code.claude.com/docs/en/desktop#work-across-sessions)。SessionHelm 在 Codex 桌面中借鉴这种主管与独立执行会话的协作方式，落实为任务卡、侧栏组织、回报和验收规则；不宣称完整复刻 Claude 的原生嵌套界面或生命周期。
 
 2026-11-11 的 Windows 本地验收记录覆盖会话创建、分组、双向回报与唤醒、版本处理、依赖汇合、阻塞识别、fork、交接及归档恢复。运行仍取决于宿主实际开放的会话和侧栏工具。完整范围见[兼容性与验收](references/兼容性与验收.md)。
 

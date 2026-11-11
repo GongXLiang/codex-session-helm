@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="512" viewBox="0 0 1536 512" role="img" aria-label="SessionHelm — 规划 · 派发 · 验收">
+<style>text{font-family:"Segoe UI Variable Display","Segoe UI","Noto Sans SC","Microsoft YaHei",sans-serif}</style>
+<image href="hero-plate.png" width="1536" height="512" preserveAspectRatio="xMidYMid slice"/>
+<text x="72" y="192" font-size="28" fill="#B8B3A8" letter-spacing="5">会话领航</text>
+<text x="72" y="289" font-size="86" fill="#F3EFE7" font-weight="600" letter-spacing="-1.4">SessionHelm</text>
+<text x="76" y="345" font-size="30" fill="#B8B3A8" >规划 · 派发 · 验收</text>
+</svg>
