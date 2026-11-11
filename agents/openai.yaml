@@ -1,0 +1,7 @@
+interface:
+  display_name: "SessionHelm（会话领航）"
+  short_description: "组织桌面独立会话的规划、派发、侧栏分组、回报续接、验收与恢复"
+  default_prompt: "请使用 $session-helm，读取项目计划与状态，按本次授权组织独立执行会话和侧栏分组，核对回报、独立验收并续接。"
+
+policy:
+  allow_implicit_invocation: true

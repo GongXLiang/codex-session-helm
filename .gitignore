@@ -1,0 +1,25 @@
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local editor settings and recovery files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local credentials; a deliberately sanitized example may be tracked
+.env
+.env.*
+!.env.example
+
+# Local runs, reports, backups, and scratch files
+/tmp/
+/local/
+/logs/
+/backups/
+*.log
+*.tmp
+*.bak
