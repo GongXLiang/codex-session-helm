@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="940" viewBox="0 0 1200 940" role="img" aria-labelledby="title desc">
+  <title id="title">SessionHelm：主管置顶，执行会话集中分组</title>
+  <desc id="desc">侧栏布局示意图，非 Codex 真实截图。置顶区放置论文修订主管对话，负责规划、派发、验收；论文修订执行会话分组包含 T01 核对正文、T02 修订图表、T03 汇总检查。不表示原生父子关系或自动折叠。</desc>
+  <rect width="1200" height="940" rx="22" fill="#102C3A"/>
+  <g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif">
+    <text x="64" y="115" font-size="88" font-weight="700" fill="#FFFFFF">SessionHelm</text>
+    <text x="860" y="110" font-size="46" fill="#8FE1CB">会话领航</text>
+    <text x="64" y="182" font-size="40" fill="#D2E2E8">主管对话置顶，执行会话集中分组。</text>
+    <text x="64" y="263" font-size="34" fill="#D2E2E8">侧栏布局示意 · 非真实截图</text>
+    <g id="pinned-supervisor">
+      <text x="64" y="334" font-size="38" fill="#8FE1CB">置顶区</text>
+      <rect x="64" y="361" width="1072" height="137" rx="16" fill="#204352"/>
+      <path d="M92 383 H103 V476 H92 Z" fill="#8FE1CB"/>
+      <text x="132" y="417" font-size="44" font-weight="600" fill="#FFFFFF">论文修订｜主管</text>
+      <text x="132" y="468" font-size="36" fill="#D2E2E8">规划、派发、验收</text>
+    </g>
+    <g id="grouped-executors">
+      <text x="64" y="571" font-size="40" fill="#8FE1CB">论文修订｜执行会话</text>
+      <rect x="64" y="601" width="1072" height="275" rx="16" fill="#204352"/>
+      <g stroke="#526975" stroke-width="1"><path d="M96 692 H1104"/><path d="M96 784 H1104"/></g>
+      <g fill="#FFFFFF" font-size="42">
+        <text x="110" y="660">T01　核对正文</text>
+        <text x="110" y="752">T02　修订图表</text>
+        <text x="110" y="844">T03　汇总检查</text>
+      </g>
+    </g>
+  </g>
+</svg>

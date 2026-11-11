@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="830" viewBox="0 0 1200 830" role="img" aria-labelledby="title desc">
+  <title id="title">五项任务，下一批只派发两项</title>
+  <desc id="desc">仓库虚构示例 demo-document-review 的状态图。T01 确认输入范围已验收，T02 核对正文和 T03 核对图表可以派发；T04 汇总验收等待这两项通过；T05 补充附录等待作者原件。此图是静态示例，并非实时桌面截图。</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#526975" stroke-width="1.5"/></marker></defs>
+  <rect width="1200" height="830" rx="22" fill="#F4F7F8"/>
+  <g font-family="Segoe UI, Microsoft YaHei, PingFang SC, sans-serif">
+    <text x="64" y="86" font-size="44" font-weight="700" fill="#102C3A">五项任务，下一批只派发两项</text>
+    <text x="64" y="137" font-size="28" fill="#526975">DEMO / 文档审阅 · 静态示例</text>
+    <g id="dependencies" fill="none" stroke="#526975" stroke-width="2" marker-end="url(#arrow)">
+      <path d="M485 285 H280 V342"/>
+      <path d="M715 285 H920 V342"/>
+      <path d="M280 477 V530 H600 V573"/>
+      <path d="M920 477 V530 H600 V573"/>
+    </g>
+    <rect x="355" y="190" width="490" height="120" rx="16" fill="#187D72"/>
+    <text x="600" y="240" text-anchor="middle" font-size="38" font-weight="600" fill="#FFFFFF">T01 · 确认输入范围</text>
+    <text x="600" y="285" text-anchor="middle" font-size="34" fill="#FFFFFF">v1 已验收</text>
+    <g fill="#FFFFFF" stroke="#187D72" stroke-width="2">
+      <rect x="70" y="355" width="420" height="120" rx="16"/>
+      <rect x="710" y="355" width="420" height="120" rx="16"/>
+    </g>
+    <g fill="#102C3A" text-anchor="middle" font-size="38" font-weight="600">
+      <text x="280" y="406">T02 · 核对正文</text>
+      <text x="920" y="406">T03 · 核对图表</text>
+    </g>
+    <g fill="#187D72" text-anchor="middle" font-size="34">
+      <text x="280" y="451">可派发</text><text x="920" y="451">可派发</text>
+    </g>
+    <rect x="355" y="585" width="490" height="120" rx="16" fill="#E3EAED"/>
+    <text x="600" y="635" text-anchor="middle" font-size="38" font-weight="600" fill="#102C3A">T04 · 汇总验收</text>
+    <text x="600" y="680" text-anchor="middle" font-size="34" fill="#526975">等待 T02、T03 验收</text>
+    <circle cx="83" cy="768" r="8" fill="#9A621B"/>
+    <text x="110" y="780" font-size="34" fill="#9A621B">T05 · 补充附录：依赖 T01，仍待作者原件</text>
+  </g>
+</svg>
