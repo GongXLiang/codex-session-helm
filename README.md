@@ -14,6 +14,8 @@ SessionHelm 是一个面向 Codex 桌面的会话协作 Skill。主管负责规�
 - 在已授权范围内派发、回报和续接；重复或旧版本通知不会自动推进任务。
 - 分开记录回合结束、报告就绪和验收通过；缺少输入或需要审批时保留未完成依赖。
 - 用项目已有文件保存有效状态，支持主管交接、恢复和工作流层解除关联。
+- 依赖绑定已验收版本；上游变化会提示受影响的下游复核，避免沿用失效结果。
+- 小任务使用简版任务卡；复杂协作按并发名额、依赖和写入范围选择下一批。
 
 本仓库提供工作规则和模板，通过宿主原生工具执行。它不附带编排服务器，也不修改 Codex 的原生界面或父子生命周期。
 
@@ -29,7 +31,13 @@ SessionHelm 是一个面向 Codex 桌面的会话协作 Skill。主管负责规�
 
 其他宿主的技能根目录以实际配置为准。安装后在技能选择器中查找 **SessionHelm（会话领航）**，或显式调用 `$session-helm`；若当前会话未发现更新，使用新的对话检查。
 
-建议 GitHub 仓库名为 `codex-session-helm`，安装目录和 Skill 调用名统一为 `session-helm`。
+GitHub 仓库为 [GongXLiang/codex-session-helm](https://github.com/GongXLiang/codex-session-helm)，安装目录和 Skill 调用名统一为 `session-helm`。全新 Windows 安装可使用 PowerShell：
+
+```powershell
+git clone https://github.com/GongXLiang/codex-session-helm.git "$env:USERPROFILE\.codex\skills\session-helm"
+```
+
+目标目录已有 Skill 时先检查现有来源和本地修改，不覆盖安装。
 
 ## 使用
 
@@ -52,10 +60,28 @@ SessionHelm 是一个面向 Codex 桌面的会话协作 Skill。主管负责规�
 | [SKILL.md](SKILL.md) | Skill 标识、核心流程和按需读取入口 |
 | [agents/openai.yaml](agents/openai.yaml) | 显示名称、默认提示词和调用策略 |
 | [任务派发模板](assets/任务派发模板.md) | 给独立执行会话的任务卡 |
+| [简版任务卡](assets/简版任务卡.md) | 输入明确的小任务，减少重复上下文 |
 | [回报与验收模板](assets/回报与验收模板.md) | 完整回报、主管裁决和状态登记 |
 | [桌面会话协议](references/桌面会话协议.md) | 消息、版本、去重、汇合与续接 |
 | [嵌套会话与分组](references/嵌套会话与分组.md) | 显示组织、交接和生命周期 |
 | [兼容性与验收](references/兼容性与验收.md) | 实测范围、能力边界和验收方法 |
+| [调度与上下文](references/调度与上下文.md) | 批次选择、上下文控制、版本变更影响 |
+| [状态与看板](references/状态与看板.md) | 只读检查工具和可视化说明 |
+| [停止与重启验证](references/停止与重启验证.md) | 操作步骤与有效证据 |
+
+## 可选的依赖检查与看板
+
+无需额外安装依赖，Python 3.10+ 即可运行。已有项目状态足够简单时无需启用；启用后只维护一份权威状态。
+
+```sh
+python scripts/helm.py check examples/demo-state.json --check-files
+python scripts/helm.py ready examples/demo-state.json
+python scripts/helm.py board examples/demo-state.json --output examples/demo-board.md
+```
+
+查看[演示看板](examples/demo-board.md)：表格显示当前版本、阻塞和下一动作，Mermaid 图显示依赖。工具发现旧版本及传递影响、循环、缺失前置与声明写入冲突，并建议下一批；它不派发任务、不修改状态、不替代实际验收。
+
+运行工具测试：`python -m unittest discover -s tests -v`。桌面停止和重启属于另外的行为实测，不能由这些自动检查推断通过。
 
 ## 兼容性
 
@@ -63,13 +89,15 @@ SessionHelm 是一个面向 Codex 桌面的会话协作 Skill。主管负责规�
 
 运行需要宿主提供创建、读取、发送和等待会话等能力；分组另需侧栏工具。工具名称、权限和可用环境可能变化，应先发现现场能力。工具缺失时，Skill 会报告缺口，不承诺自动补出宿主功能。
 
-折叠／展开、真实停止、应用重启、长期后台和跨环境运行尚未完成验证；工作流层解除关联也不等于取消原生回调。不同宿主应分别验收。
+真实停止测试发现：停止按钮中断了对话回合，但测试进程继续运行。流程因此要求分别核对回合、进程和输出，并在授权范围内处理仍在运行的本任务进程。
+
+应用真实退出重开后的原会话续接已验证：会话历史与检查点保留，只执行剩余步骤，已有产物内容和写入时间不变。这不代表关闭期间继续运行或保证自动唤醒。折叠／展开、长期后台和跨环境运行尚未完成验证；工作流层解除关联也不等于取消原生回调。不同宿主应分别验收。
 
 ## 仓库维护
 
-本仓库只管理 SessionHelm 的规则、模板和项目说明。实际任务计划、会话 ID、报告和验证产物保存在对应项目中。
+本仓库只管理 SessionHelm 的规则、模板、辅助工具、虚构示例和相应测试。实际任务计划、会话 ID、报告和验证产物保存在对应项目中。
 
-`.gitignore` 排除本地配置、凭据文件、临时目录、日志和备份；`.gitattributes` 统一文本换行，`.editorconfig` 约定 UTF-8 和编辑格式。提交前核对文件清单，避免混入本机任务材料。
+`.gitignore` 决定哪些文件不进入版本记录；`.gitattributes` 规定 Git 怎样处理文件：本项目的 `* text=auto eol=lf` 自动识别文本并统一为 LF 换行，减少 Windows 与其他系统之间的无意义差异；`.editorconfig` 则给编辑器约定 UTF-8 和缩进等格式。提交前核对文件清单，避免混入本机任务材料。
 
 ## 许可证
 

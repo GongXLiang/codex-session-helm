@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "workflow_id": "demo-document-review",
+  "updated_at": "2026-11-11T12:00:00+09:00",
+  "concurrency_limit": 2,
+  "case_sensitive_paths": false,
+  "tasks": [
+    {"id": "T01", "title": "确认输入范围", "version": 1, "status": "accepted", "run_state": "idle", "depends_on": [], "workspace": "demo-host:/demo-project", "write_paths": ["scope.md"], "report": "demo-evidence.md", "review": "demo-evidence.md"},
+    {"id": "T02", "title": "核对正文", "version": 1, "status": "planned", "depends_on": [{"id": "T01", "version": 1}], "workspace": "demo-host:/demo-project", "write_paths": ["review/text.md"]},
+    {"id": "T03", "title": "核对图表", "version": 1, "status": "planned", "depends_on": [{"id": "T01", "version": 1}], "workspace": "demo-host:/demo-project", "write_paths": ["review/figures.md"]},
+    {"id": "T04", "title": "汇总验收", "version": 1, "status": "planned", "depends_on": [{"id": "T02", "version": 1}, {"id": "T03", "version": 1}], "workspace": "demo-host:/demo-project", "write_paths": ["review/summary.md"]},
+    {"id": "T05", "title": "补充附录", "version": 1, "status": "waiting_input", "depends_on": [{"id": "T01", "version": 1}], "workspace": "demo-host:/demo-project", "write_paths": ["appendix.md"], "reason": "等待作者提供附录原件"}
+  ]
+}
