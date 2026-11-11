@@ -6,7 +6,9 @@ from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 import io
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
@@ -177,6 +179,33 @@ class OutputTests(unittest.TestCase):
         self.assertEqual(board.count("```"), 2)
         self.assertIn('N0["', board)
         self.assertIn("&#124;", board)
+
+    def test_cli_uses_utf8_when_host_default_cannot_encode_chinese(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "state.json"
+            path.write_text(json.dumps(state(task("A", title="核对正文"))), encoding="utf-8")
+            script = Path(__file__).resolve().parents[1] / "scripts" / "helm.py"
+            environment = {**os.environ, "PYTHONIOENCODING": "cp1252"}
+            for command in ("check", "ready", "board"):
+                with self.subTest(command=command):
+                    result = subprocess.run([sys.executable, str(script), command, str(path)],
+                                            env=environment, capture_output=True, check=False)
+                    self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8", errors="replace"))
+                    output = result.stdout.decode("utf-8")
+                    if command == "board":
+                        self.assertIn("核对正文", output)
+                    else:
+                        self.assertEqual(json.loads(output)["next_batch"], ["A"])
+
+    def test_cli_error_paths_are_utf8_in_legacy_locale(self) -> None:
+        with TemporaryDirectory() as directory:
+            missing = Path(directory) / "缺失.json"
+            script = Path(__file__).resolve().parents[1] / "scripts" / "helm.py"
+            result = subprocess.run([sys.executable, str(script), "check", str(missing)],
+                                    env={**os.environ, "PYTHONIOENCODING": "cp1252"},
+                                    capture_output=True, check=False)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("缺失.json", result.stderr.decode("utf-8"))
 
 
 if __name__ == "__main__":
