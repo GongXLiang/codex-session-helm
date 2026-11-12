@@ -17,13 +17,15 @@ def parser() -> argparse.ArgumentParser:
     root.add_argument("--db", type=Path, help="Explicit local ledger path, outside the skill checkout")
     root.add_argument("--owner", help="Current supervisor thread ID; a workflow identifier, not authentication")
     root.add_argument("--epoch", type=int, help="Current supervisor handoff generation")
+    root.add_argument('--pretty', action='store_true', help='Indent JSON for human reading')
     commands = root.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init")
     init.add_argument("--active-limit", type=int, default=3)
     init.add_argument("--review-limit", type=int, default=4)
     register = commands.add_parser("register")
     register.add_argument("config", type=Path)
-    commands.add_parser("scan")
+    scan = commands.add_parser("scan")
+    scan.add_argument('--verify', action='store_true', help='Bypass the in-process scan cache')
     commands.add_parser("portfolio")
     limits = commands.add_parser("limits")
     limits.add_argument("--active", type=int, required=True)
@@ -37,6 +39,42 @@ def parser() -> argparse.ArgumentParser:
     focus = commands.add_parser("focus")
     focus.add_argument("--project", required=True)
     focus.add_argument("--output", type=Path)
+    focus.add_argument('--workflow')
+    focus.add_argument('--task')
+    focus.add_argument('--delta', action='store_true')
+    append = commands.add_parser('append')
+    append.add_argument('--project', required=True)
+    append.add_argument('--workflow', required=True)
+    append.add_argument('--tasks', type=Path, required=True, help='JSON object with a tasks array')
+    append.add_argument('--expected', type=int, required=True, help='Workflow generation, 0 for a new workflow')
+    append.add_argument('--reason', required=True)
+    for name in ('archive-workflow', 'restore-workflow'):
+        lifecycle = commands.add_parser(name)
+        lifecycle.add_argument('--project', required=True)
+        lifecycle.add_argument('--workflow', required=True)
+        lifecycle.add_argument('--expected', type=int, required=True)
+        lifecycle.add_argument('--summary', required=True)
+    listing = commands.add_parser('list-tasks')
+    listing.add_argument('--project', required=True)
+    listing.add_argument('--workflow')
+    listing.add_argument('--offset', type=int, default=0)
+    listing.add_argument('--limit', type=int, default=20)
+    listing.add_argument('--include-archived', action='store_true')
+    gate = commands.add_parser('set-gate')
+    gate.add_argument('--project', required=True)
+    gate.add_argument('--id', required=True)
+    gate.add_argument('--title', required=True)
+    gate.add_argument('--state', choices=['pending', 'passed', 'failed'], required=True)
+    gate.add_argument('--reason', required=True)
+    gate.add_argument('--evidence')
+    gate.add_argument('--task-ref', action='append', default=[], help='workflow/task; repeat for accepted deliverables')
+    precheck = commands.add_parser('record-precheck')
+    precheck.add_argument('--review', required=True)
+    precheck.add_argument('--reviewer', required=True)
+    precheck.add_argument('--evidence', required=True)
+    precheck.add_argument('--note', required=True)
+    next_review = commands.add_parser('next-review')
+    next_review.add_argument('--review')
     checkpoint = commands.add_parser("checkpoint")
     checkpoint.add_argument("--project", required=True)
     checkpoint.add_argument("--summary", required=True)
@@ -117,7 +155,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.db is None:
                 raise LedgerError("--db is required")
             ledger = Ledger(args.db)
-            reads = {"scan", "snapshot", "context", "export", "serve", "portfolio"}
+            reads = {"scan", "snapshot", "context", "export", "serve", "portfolio", "list-tasks"}
             if args.command not in reads and not args.owner:
                 raise LedgerError("--owner is required for supervisor mutations")
             if args.command not in reads | {"init"} and args.epoch is None:
@@ -132,7 +170,28 @@ def main(argv: Sequence[str] | None = None) -> int:
             elif args.command == "save-context":
                 result = {"context_version": ledger.save_context(args.project, read_json(args.capsule), args.expected, args.owner, args.epoch)}
             elif args.command == "focus":
-                result = ledger.focus(args.project, args.owner, args.epoch)
+                result = ledger.focus(args.project, args.owner, args.epoch, workflow=args.workflow, task=args.task, delta=args.delta)
+            elif args.command == 'append':
+                tasks = read_json(args.tasks).get('tasks')
+                if not isinstance(tasks, list) or not all(isinstance(t, dict) for t in tasks):
+                    raise LedgerError('tasks file requires an array of task objects')
+                result = ledger.append_tasks(args.project, args.workflow, tasks, args.expected, args.reason, args.owner, args.epoch)
+            elif args.command in {'archive-workflow', 'restore-workflow'}:
+                result = ledger.archive_workflow(args.project, args.workflow, args.expected, args.summary, args.owner, args.epoch, restore=args.command == 'restore-workflow')
+            elif args.command == 'list-tasks':
+                result = ledger.list_tasks(args.project, args.workflow, args.offset, args.limit, include_archived=args.include_archived)
+            elif args.command == 'set-gate':
+                refs = []
+                for ref in args.task_ref:
+                    parts = ref.split('/')
+                    if len(parts) != 2:
+                        raise LedgerError('task-ref must be workflow/task')
+                    refs.append({'project': args.project, 'workflow': parts[0], 'task': parts[1]})
+                ledger.set_gate(args.project, args.id, args.title, args.state, args.reason, args.evidence, refs, args.owner, args.epoch)
+            elif args.command == 'record-precheck':
+                ledger.record_precheck(args.review, args.reviewer, args.evidence, args.note, args.owner, args.epoch)
+            elif args.command == 'next-review':
+                result = ledger.next_review(args.owner, args.epoch, args.review)
             elif args.command == "checkpoint":
                 ledger.checkpoint(args.project, args.summary, args.next, args.question, args.owner, args.epoch)
             elif args.command == "portfolio":
@@ -144,7 +203,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             elif args.command == "resolve-decision":
                 ledger.resolve_decision(args.decision, args.answer, args.evidence, args.owner, args.epoch)
             elif args.command == "scan":
-                result = ledger.scan()
+                result = ledger.scan(verify=args.verify)
             elif args.command == "snapshot":
                 result = ledger.snapshot()
             elif args.command == "context":
@@ -178,7 +237,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if output.resolve() == ledger.path:
                     raise LedgerError("cannot overwrite the ledger with an export")
                 atomic_json(output, result)
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(json.dumps(result, ensure_ascii=False, indent=2 if args.pretty else None, separators=None if args.pretty else (',', ':')))
         return 0
     except (LedgerError, ValueError, OSError, sqlite3.Error) as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False), file=sys.stderr)

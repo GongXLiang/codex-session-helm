@@ -1,36 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="548" viewBox="0 0 360 548" role="img" aria-labelledby="title desc">
-<title id="title">SessionHelm — task dependencies</title>
-<desc id="desc">T01 accepted. T02 and T03 ready. T04 awaits acceptance of T02 and T03. T05 awaits the author original. All tasks v1.</desc>
-<style>text{font-family:"Segoe UI", "Noto Sans SC", "Microsoft YaHei",sans-serif}path{vector-effect:non-scaling-stroke}</style>
-<path d="M0 0H360V548H0Z" fill="#232323"/>
-<defs><marker id="arrow" orient="auto" markerUnits="userSpaceOnUse" refX="8" refY="5" markerWidth="10" markerHeight="10"><path d="M1 1L8 5 1 9" fill="none" stroke="#B0ADA7" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<path data-from="T01" data-to="T02" data-upstream-accepted="true" d="M50.77499999999999 41.42H22V133.42H50.77499999999999" fill="none" stroke="#B0ADA7" stroke-width="1.5"  marker-end="url(#arrow)"/>
-<path data-from="T01" data-to="T03" data-upstream-accepted="true" d="M50.77499999999999 41.42H22V221.42H50.77499999999999" fill="none" stroke="#B0ADA7" stroke-width="1.5"  marker-end="url(#arrow)"/>
-<path data-from="T02" data-to="T04" data-upstream-accepted="false" d="M116.975 144.97H142V320.97H116.975" fill="none" stroke="#7E7C78" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
-<path data-from="T03" data-to="T04" data-upstream-accepted="false" d="M116.975 232.97H142V320.97H116.975" fill="none" stroke="#7E7C78" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
-<path data-from="T01" data-to="T05" data-upstream-accepted="true" d="M50.77499999999999 41.42H22V413.42H50.77499999999999" fill="none" stroke="#B0ADA7" stroke-width="1.5"  marker-end="url(#arrow)"/>
-<g transform="matrix(0.7 0.175 -0.385 0.476 78.1 20)" stroke-linejoin="round"><path d="M0 90H66l2 3H2Z M66 0l2 3v90l-2-3Z" fill="#303031" stroke="#77756F" stroke-width=".8"/><path d="M0 0H66V90H0Z" fill="#292929" stroke="#A8A49B" stroke-width="1.2"/><path d="M10 16H56" stroke="#72706B" fill="none"/><path d="M10 25H56" stroke="#72706B" fill="none"/><path d="M10 34H49" stroke="#72706B" fill="none"/><path d="M10 43H56" stroke="#72706B" fill="none"/><path d="M10 52H56" stroke="#72706B" fill="none"/><path d="M7 29H59V48H7Z" fill="none" stroke="#B8B3A8"/><circle cx="49" cy="71" r="10" fill="#4FB3A3"/><path d="m44 71 3 3 7-7" fill="none" stroke="#232323" stroke-width="2.5"/></g>
-<text x="164" y="26" font-size="13" fill="#B8B3A8" font-family="Consolas,monospace">T01 · v1</text>
-<text x="164" y="47" font-size="15" fill="#ECE8DF" >确认输入范围</text>
-<text x="164" y="68" font-size="13.5" fill="#4FB3A3" >已验收</text>
-<g transform="matrix(0.7 0.175 -0.385 0.476 78.1 112)" stroke-linejoin="round"><path d="M0 90H66l2 3H2Z M66 0l2 3v90l-2-3Z" fill="#303031" stroke="#77756F" stroke-width=".8"/><path d="M0 0H66V90H0Z" fill="#292929" stroke="#A8A49B" stroke-width="1.2"/><path d="M10 16H56" stroke="#72706B" fill="none"/><path d="M10 25H56" stroke="#72706B" fill="none"/><path d="M10 34H49" stroke="#72706B" fill="none"/><path d="M10 43H56" stroke="#72706B" fill="none"/><path d="M10 52H56" stroke="#72706B" fill="none"/><path d="M10 61H49" stroke="#72706B" fill="none"/><path d="M10 70H56" stroke="#72706B" fill="none"/><circle cx="53" cy="11" r="5" fill="#292929" stroke="#ECE8DF" stroke-width="1.6"/></g>
-<text x="164" y="118" font-size="13" fill="#B8B3A8" font-family="Consolas,monospace">T02 · v1</text>
-<text x="164" y="139" font-size="15" fill="#ECE8DF" >核对正文</text>
-<text x="164" y="160" font-size="13.5" fill="#ECE8DF" >可派发</text>
-<g transform="matrix(0.7 0.175 -0.385 0.476 78.1 200)" stroke-linejoin="round"><path d="M0 90H66l2 3H2Z M66 0l2 3v90l-2-3Z" fill="#303031" stroke="#77756F" stroke-width=".8"/><path d="M0 0H66V90H0Z" fill="#292929" stroke="#A8A49B" stroke-width="1.2"/><path d="M10 42H56 M14 39V24h8v15 M28 39V14h8v25 M42 39V20h8v19" fill="none" stroke="#B8B3A8" stroke-width="1.4"/><path d="M10 53H56V77H10Z M10 65H56 M25 53V77 M41 53V77" stroke="#72706B" fill="none"/><circle cx="56" cy="9" r="5" fill="#292929" stroke="#ECE8DF" stroke-width="1.6"/></g>
-<text x="164" y="206" font-size="13" fill="#B8B3A8" font-family="Consolas,monospace">T03 · v1</text>
-<text x="164" y="227" font-size="15" fill="#ECE8DF" >核对图表</text>
-<text x="164" y="248" font-size="13.5" fill="#ECE8DF" >可派发</text>
-<g transform="matrix(0.7 0.175 -0.385 0.476 78.1 288)" stroke-linejoin="round"><path d="M0 90H66l2 3H2Z M66 0l2 3v90l-2-3Z" fill="#303031" stroke="#77756F" stroke-width=".8"/><path d="M0 0H66V90H0Z" fill="#292929" stroke="#A8A49B" stroke-width="1.2" stroke-dasharray="5 4"/><path d="M24-3H42V7H24Z" fill="#444441" stroke="#B8B3A8"/><path d="M10 23H56V43H10Z M10 53H56V73H10Z" fill="none" stroke="#8E8B85" stroke-dasharray="4 3"/></g>
-<text x="164" y="294" font-size="13" fill="#B8B3A8" font-family="Consolas,monospace">T04 · v1</text>
-<text x="164" y="315" font-size="15" fill="#ECE8DF" >汇总验收</text>
-<text x="164" y="336" font-size="13.5" fill="#A8A49B" >待前置（T02、T03）</text>
-<g transform="matrix(0.7 0.175 -0.385 0.476 78.1 392)" stroke-linejoin="round"><path d="M0 90H66l2 3H2Z M66 0l2 3v90l-2-3Z" fill="#303031" stroke="#77756F" stroke-width=".8"/><path d="M0 0H66V90H0Z" fill="#292929" stroke="#A8A49B" stroke-width="1.2"/><path d="M10 16H56" stroke="#72706B" fill="none"/><path d="M10 25H56" stroke="#72706B" fill="none"/><path d="M10 34H49" stroke="#72706B" fill="none"/><path d="M46 10V-2a4 4 0 0 1 8 0v17a6 6 0 0 1-12 0V2" stroke="#C9973F" fill="none" stroke-width="2"/><path d="M10 51H56V77H10Z" stroke="#C9973F" fill="none" stroke-dasharray="4 3"/></g>
-<text x="164" y="398" font-size="13" fill="#B8B3A8" font-family="Consolas,monospace">T05 · v1</text>
-<text x="164" y="419" font-size="15" fill="#ECE8DF" >补充附录</text>
-<text x="164" y="440" font-size="13.5" fill="#C9973F" >待原件</text>
-<path d="M22 502h27" fill="none" stroke="#B0ADA7" stroke-width="1.5" />
-<text x="58" y="506" font-size="12.5" fill="#B8B3A8" >上游已验收</text>
-<path d="M22 524h27" fill="none" stroke="#B0ADA7" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="58" y="528" font-size="12.5" fill="#B8B3A8" >等待上游验收</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="1170" viewBox="0 0 600 1170" role="img" aria-labelledby="title desc"><title id="title">你只对接主管，项目分头推进</title><desc id="desc">人沟通目标与决定；主管规划、派发、独立审查和续接；三个项目各自执行与回报。</desc>
+<rect width="600" height="1170" fill="#232629"/><style>text{font-family:"Segoe UI","Microsoft YaHei","Noto Sans SC",sans-serif}path{stroke-linecap:round;stroke-linejoin:round}</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="m2 1 6 4-6 4" stroke="#B0ADA7" stroke-width="1.5" fill="none"/></marker></defs>
+<text x="36" y="58" font-size="28" fill="#ECE8DF" text-anchor="start">少数沟通入口，多项目持续推进</text>
+<text x="36" y="90" font-size="19" fill="#B0ADA7" text-anchor="start">SessionHelm · 会话领航</text>
+<g transform="translate(105 164)" fill="none" stroke="#ECE8DF" stroke-width="2"><circle cy="-29" r="17"/><path d="M-36 28V14Q-36-6-16-6H16Q36-6 36 14V28M-22 28V9M22 28V9"/><path d="M-47 38H47" stroke="#777C7D"/></g>
+<text x="178" y="151" font-size="28" fill="#ECE8DF" text-anchor="start">你</text>
+<text x="178" y="184" font-size="22" fill="#B0ADA7" text-anchor="start">目标 · 反馈 · 关键决定</text>
+<path d="M105 215V252" stroke="#777C7D" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M143 253V216" stroke="#59B8AA" stroke-width="2" fill="none" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<g transform="translate(122 330)" fill="none" stroke="#ECE8DF" stroke-width="2"><circle r="54"/><circle r="43" stroke="#777C7D"/><path d="M0 -64V-48M0 48V64M-64 0H-48M48 0H64"/><path d="M-16 16 22-24 7 13Z" fill="#59B8AA" stroke="#59B8AA"/><path d="M-16 16-7-11 22-24"/><circle r="4" fill="#232629" stroke="#232629"/></g>
+<text x="216" y="300" font-size="30" fill="#ECE8DF" text-anchor="start">主管对话</text>
+<text x="216" y="338" font-size="21" fill="#ECE8DF" text-anchor="start">规划 · 派发 · 独立验收</text>
+<text x="216" y="371" font-size="21" fill="#59B8AA" text-anchor="start">按结果调整，再推进下一轮</text>
+<path d="M122 399V980" stroke="#777C7D" stroke-width="2" fill="none"/>
+<path d="M156 984V400" stroke="#59B8AA" stroke-width="2" fill="none" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+<path d="M122 470H210" stroke="#777C7D" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M210 543H156" stroke="#59B8AA" stroke-width="2" fill="none" stroke-dasharray="7 6"/>
+<text x="218" y="455" font-size="27" fill="#ECE8DF" text-anchor="start">A  研究项目</text>
+<text x="218" y="488" font-size="21" fill="#B0ADA7" text-anchor="start">资料 / 核验</text>
+<g transform="translate(245 509)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="M18 22H30M18 32H42M18 42H36M51 20V47M60 20V47"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<g transform="translate(395 509)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="M18 22H30M18 32H42M18 42H36M51 20V47M60 20V47"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<text x="244" y="603" font-size="19" fill="#B0ADA7" text-anchor="start">独立执行对话</text>
+<path d="M122 670H210" stroke="#777C7D" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M210 743H156" stroke="#59B8AA" stroke-width="2" fill="none" stroke-dasharray="7 6"/>
+<text x="218" y="655" font-size="27" fill="#ECE8DF" text-anchor="start">B  代码项目</text>
+<text x="218" y="688" font-size="21" fill="#B0ADA7" text-anchor="start">实现 / 测试</text>
+<g transform="translate(245 709)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="m30 24-10 10 10 10m20-20 10 10-10 10M44 20 36 48"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<g transform="translate(395 709)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="m30 24-10 10 10 10m20-20 10 10-10 10M44 20 36 48"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<text x="244" y="803" font-size="19" fill="#B0ADA7" text-anchor="start">独立执行对话</text>
+<path d="M122 870H210" stroke="#777C7D" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M210 943H156" stroke="#59B8AA" stroke-width="2" fill="none" stroke-dasharray="7 6"/>
+<text x="218" y="855" font-size="27" fill="#ECE8DF" text-anchor="start">C  写作项目</text>
+<text x="218" y="888" font-size="21" fill="#B0ADA7" text-anchor="start">起草 / 修订</text>
+<g transform="translate(245 909)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="M20 23H60M20 33H60M20 43H44"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<g transform="translate(395 909)" stroke="#B0ADA7" stroke-width="1.6" fill="none"><path d="M2 7 83 0 88 57 7 64Z"/><path d="M9 13 77 7 81 51 13 57Z" stroke="#777C7D"/><path d="M20 23H60M20 33H60M20 43H44"/><path d="M38 62 37 72 22 77 75 72 59 69 57 60" stroke="#777C7D"/></g>
+<text x="244" y="1003" font-size="19" fill="#B0ADA7" text-anchor="start">独立执行对话</text>
+<path d="M36 1086H564" stroke="#777C7D" stroke-width="2" fill="none"/>
+<text x="36" y="1123" font-size="22" fill="#59B8AA" text-anchor="start">回报集中到主管，必要时再由你决定。</text>
 </svg>

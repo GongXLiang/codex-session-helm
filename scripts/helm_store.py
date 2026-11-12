@@ -12,6 +12,9 @@ import re
 import sqlite3
 from typing import TypedDict
 import uuid
+import time
+
+import helm_lifecycle
 
 import helm
 import helm_context
@@ -153,9 +156,11 @@ CREATE TABLE imports (path TEXT PRIMARY KEY, hash TEXT NOT NULL, result TEXT NOT
 """
 
 
-class Ledger:
+class Ledger(helm_lifecycle.LifecycleMixin):
     def __init__(self, path: Path) -> None:
         self.path = path.resolve()
+        self._scan_cache: dict[str, tuple[tuple[object, ...], float]] = {}
+        self.last_scan_stats = {"hashed": 0, "cached": 0}
 
     @contextmanager
     def connection(self, *, write: bool = False) -> Iterator[sqlite3.Connection]:
@@ -166,7 +171,7 @@ class Ledger:
         db.execute("PRAGMA foreign_keys=ON")
         try:
             db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
-            if self._meta(db, "schema") not in {"1", "2"}:
+            if self._meta(db, "schema") not in {"1", "2", "3"}:
                 raise LedgerError("unsupported ledger schema")
             yield db
             db.commit()
@@ -217,7 +222,8 @@ class Ledger:
         db = sqlite3.connect(self.path)
         try:
             db.executescript(SCHEMA + helm_context.CONTEXT_SCHEMA)
-            db.executemany("INSERT INTO meta VALUES(?,?)", [("schema", "2"), ("supervisor", supervisor),
+            helm_lifecycle.install(db)
+            db.executemany("INSERT INTO meta VALUES(?,?)", [("schema", "3"), ("supervisor", supervisor),
                 ("epoch", "1"), ("active_limit", str(active_limit)), ("review_limit", str(review_limit)),
                 ("last_review_project", "")])
             self._audit(db, "initialized", None, {"supervisor": supervisor})
@@ -254,6 +260,8 @@ class Ledger:
                 spec = obj(raw)
                 db.execute("INSERT INTO tasks(project,workflow,id,spec,revision,status,updated_at) VALUES(?,?,?,?,?,?,?)",
                     (project, workflow.workflow_id, task.task_id, encode(spec), task.version, "planned", now()))
+            if self._meta(db, "schema") == "3":
+                helm_lifecycle.install(db)
             self._audit(db, "project.registered", project, config)
         scoped(root, ".session-helm/outbox").mkdir(parents=True, exist_ok=True)
 
@@ -339,8 +347,10 @@ class Ledger:
         with self.connection(write=True) as db:
             return self._ingest(db, project, event)
 
-    def scan(self) -> dict[str, int]:
+    def scan(self, *, verify: bool = False) -> dict[str, int]:
         counts = {"imported": 0, "rejected": 0, "unchanged": 0}
+        self.last_scan_stats = {"hashed": 0, "cached": 0}
+        seen: set[str] = set()
         with self.connection() as db:
             projects = db.execute("SELECT * FROM projects ORDER BY id").fetchall()
         for project in projects:
@@ -354,21 +364,33 @@ class Ledger:
             for path in paths:
                 if not path.resolve().is_relative_to(outbox.resolve()):
                     continue
+                name = str(path)
+                seen.add(name)
                 try:
                     info = path.stat()
+                    signature = (info.st_size, info.st_mtime_ns, info.st_ctime_ns, info.st_ino, str(path.resolve()))
+                    cached = self._scan_cache.get(name)
+                    if not verify and cached and cached[0] == signature and time.monotonic() - cached[1] < 60:
+                        counts['unchanged'] += 1
+                        self.last_scan_stats['cached'] += 1
+                        continue
                     if info.st_size > 256 * 1024:
                         self._reject_import(str(path), f"oversized:{info.st_size}:{info.st_mtime_ns}", project["id"],
                             "event exceeds 256 KiB; put detailed content in the report", counts)
                         continue
                     file_hash = digest(path)
+                    self.last_scan_stats['hashed'] += 1
                 except OSError as exc:
                     self._reject_import(str(path), "unreadable:" + str(exc), project["id"], str(exc), counts)
                     continue
-                with self.connection(write=True) as db:
+                with self.connection() as db:
                     prior = db.execute("SELECT hash FROM imports WHERE path=?", (str(path),)).fetchone()
                     if prior and prior["hash"] == file_hash:
                         counts["unchanged"] += 1
+                        self._scan_cache[name] = (signature, time.monotonic())
                         continue
+                with self.connection(write=True) as db:
+                    # Another collector may import after the read. _ingest is idempotent.
                     db.execute("SAVEPOINT event_import")
                     try:
                         if path.stat().st_size > 256 * 1024:
@@ -384,6 +406,8 @@ class Ledger:
                         db.execute("RELEASE event_import")
                     db.execute("INSERT INTO imports VALUES(?,?,?) ON CONFLICT(path) DO UPDATE SET hash=excluded.hash,result=excluded.result",
                         (str(path), file_hash, result))
+                self._scan_cache[name] = (signature, time.monotonic())
+        self._scan_cache = {k: v for k, v in self._scan_cache.items() if k in seen}
         return counts
 
     def _reject_import(self, path: str, fingerprint: str, project: str, reason: str,
@@ -423,11 +447,13 @@ class Ledger:
         return False
 
     def _ready_reason(self, db: sqlite3.Connection, row: sqlite3.Row) -> str:
+        if not helm_lifecycle.active(self, db, row["project"], row["workflow"]):
+            return "workflow is archived"
         if row["status"] != "planned":
             return "task is not planned"
         if row["attempt"] and row["run_state"] != "idle":
             return "previous execution has not been verified idle"
-        if self._meta(db, "schema") == "2" and db.execute("SELECT 1 FROM decisions WHERE project=? AND workflow=? AND task=? AND state='open'", (row["project"], row["workflow"], row["id"])).fetchone():
+        if self._meta(db, "schema") != "1" and db.execute("SELECT 1 FROM decisions WHERE project=? AND workflow=? AND task=? AND state='open'", (row["project"], row["workflow"], row["id"])).fetchone():
             return "user decision is still open"
         if not self._deps_valid(db, row):
             return "dependency is not accepted at the required revision"
@@ -449,7 +475,7 @@ class Ledger:
         """Reserve one dispatch; the caller performs and reconciles the native tool call."""
         with self.connection(write=True) as db:
             self._owner(db, owner, epoch)
-            helm_context.require_focus(self, db, key["project"], owner, epoch)
+            helm_context.require_focus(self, db, key["project"], owner, epoch, key)
             row = self._task(db, key)
             reason = self._ready_reason(db, row)
             if reason:
@@ -563,13 +589,13 @@ class Ledger:
                 raise LedgerError("task changed during review")
             if row["thread"] == owner:
                 raise LedgerError("executor cannot independently accept its own result")
-            helm_context.require_focus(self, db, key["project"], owner, epoch)
+            helm_context.require_focus(self, db, key["project"], owner, epoch, key)
             root = Path(self._project(db, row["project"])["root"])
             review_evidence = evidence(root, review_path)
             if review_evidence["path"] in {e["path"] for e in json.loads(review["manifest"])}:
                 raise LedgerError("review evidence must be separate from executor evidence")
             if verdict == "accepted":
-                if self._meta(db, "schema") == "2" and db.execute("SELECT 1 FROM decisions WHERE project=? AND workflow=? AND task=? AND state='open'", (row["project"], row["workflow"], row["id"])).fetchone():
+                if self._meta(db, "schema") != "1" and db.execute("SELECT 1 FROM decisions WHERE project=? AND workflow=? AND task=? AND state='open'", (row["project"], row["workflow"], row["id"])).fetchone():
                     raise LedgerError("user decision is still open")
                 if row["run_state"] != "idle":
                     raise LedgerError("verify executor and owned work have settled before accepting")
@@ -586,8 +612,10 @@ class Ledger:
     def revise(self, key: TaskKey, spec: dict[str, object], reason: str, owner: str, epoch: int) -> None:
         with self.connection(write=True) as db:
             self._owner(db, owner, epoch)
-            helm_context.require_focus(self, db, key["project"], owner, epoch)
+            helm_context.require_focus(self, db, key["project"], owner, epoch, key)
             old = self._task(db, key)
+            if not helm_lifecycle.active(self, db, key["project"], key["workflow"]):
+                raise LedgerError("restore workflow before revision")
             if spec.get("id") != key["task"] or integer(spec.get("version")) != old["revision"] + 1:
                 raise LedgerError("revision must retain task ID and increase version by exactly one")
             spec = {**spec, "status": "planned", "run_state": "unknown"}
@@ -605,7 +633,7 @@ class Ledger:
                 (encode(spec), spec["version"], text(reason), now(), key["project"], key["workflow"], key["task"]))
             db.execute("UPDATE reviews SET state='superseded',closed_at=? WHERE project=? AND workflow=? AND task=? AND state IN ('queued','claimed')",
                 (now(), key["project"], key["workflow"], key["task"]))
-            if self._meta(db, "schema") == "2":
+            if self._meta(db, "schema") != "1":
                 db.execute("UPDATE decisions SET state='superseded' WHERE project=? AND workflow=? AND task=? AND state='open'", (key["project"], key["workflow"], key["task"]))
             self._audit(db, "task.revised", key["project"], {**key, "previous": json.loads(old["spec"]), "spec": spec, "reason": reason})
 
@@ -616,7 +644,7 @@ class Ledger:
             db.execute("UPDATE meta SET value=? WHERE key='supervisor'", (successor,))
             db.execute("UPDATE meta SET value=? WHERE key='epoch'", (str(epoch + 1),))
             db.execute("UPDATE reviews SET state='queued',owner=NULL,epoch=NULL,token=NULL WHERE state='claimed'")
-            if self._meta(db, "schema") == "2":
+            if self._meta(db, "schema") != "1":
                 db.execute("DELETE FROM focus")
             self._audit(db, "supervisor.handoff", None, {"from": owner, "to": successor, "epoch": epoch + 1, "reason": text(reason)})
             return epoch + 1
@@ -640,14 +668,15 @@ class Ledger:
                 "supervisor": self._meta(db, "supervisor"), "epoch": int(self._meta(db, "epoch"))}
 
     def upgrade(self, backup: Path, owner: str, epoch: int) -> None:
-        """Explicit v1 migration with a SQLite-consistent backup and a concurrent-write check."""
+        """Explicit v1/v2 migration with a SQLite-consistent backup and a concurrent-write check."""
         backup = backup.resolve()
         if backup == self.path or backup.exists():
             raise LedgerError("migration backup must be a new, separate file")
         with self.connection() as db:
             self._owner(db, owner, epoch)
-            if self._meta(db, "schema") != "1":
-                raise LedgerError("only schema 1 needs upgrade")
+            original = self._meta(db, "schema")
+            if original not in {"1", "2"}:
+                raise LedgerError("only schema 1 or 2 needs upgrade")
             sequence = db.execute("SELECT coalesce(max(seq),0) FROM changes").fetchone()[0]
             backup.parent.mkdir(parents=True, exist_ok=True)
             with backup.open("xb"):
@@ -659,12 +688,15 @@ class Ledger:
                 target.close()
         with self.connection(write=True) as db:
             self._owner(db, owner, epoch)
-            if self._meta(db, "schema") != "1" or sequence != db.execute("SELECT coalesce(max(seq),0) FROM changes").fetchone()[0]:
+            if self._meta(db, "schema") != original or sequence != db.execute("SELECT coalesce(max(seq),0) FROM changes").fetchone()[0]:
                 raise LedgerError("ledger changed during backup; stop writers and retry with a new backup path")
-            for statement in helm_context.CONTEXT_SCHEMA.split(";"):
-                if statement.strip():
-                    db.execute(statement)
-            db.execute("UPDATE meta SET value='2' WHERE key='schema'")
+            if original == "1":
+                for statement in helm_context.CONTEXT_SCHEMA.split(";"):
+                    if statement.strip():
+                        db.execute(statement)
+            helm_lifecycle.install(db)
+            db.execute("DELETE FROM focus")
+            db.execute("UPDATE meta SET value='3' WHERE key='schema'")
             self._audit(db, "schema.upgraded", None, {"backup": str(backup)})
 
     def save_context(self, project: str, capsule: dict[str, object], expected: int, owner: str, epoch: int) -> int:
@@ -673,7 +705,7 @@ class Ledger:
         with self.connection(write=True) as db:
             self._owner(db, owner, epoch)
             p = self._project(db, project)
-            if self._meta(db, "schema") != "2":
+            if self._meta(db, "schema") == "1":
                 raise LedgerError("upgrade the ledger to enable supervisor context")
             prior = db.execute("SELECT version FROM contexts WHERE project=?", (project,)).fetchone()
             if integer(expected, 0) != (prior["version"] if prior else 0):
@@ -698,22 +730,32 @@ class Ledger:
             self._audit(db, "context.saved", project, {"version": expected + 1, "sources": sources})
             return expected + 1
 
-    def focus(self, project: str, owner: str, epoch: int) -> dict[str, object]:
+    def focus(self, project: str, owner: str, epoch: int, *, workflow: str | None = None,
+              task: str | None = None, delta: bool = False) -> dict[str, object]:
         with self.connection(write=True) as db:
             self._owner(db, owner, epoch)
-            if self._meta(db, "schema") != "2":
+            if self._meta(db, "schema") == "1":
                 raise LedgerError("upgrade the ledger to enable supervisor context")
+            modern = self._meta(db, 'schema') == '3'
+            if (task or workflow or delta) and not modern:
+                raise LedgerError('upgrade to schema 3 for scoped or delta focus')
             active = db.execute("SELECT * FROM focus WHERE slot=1").fetchone()
             if active and active["project"] != project:
                 raise LedgerError("checkpoint the current project before switching focus")
             claimed = db.execute("SELECT project FROM reviews WHERE state='claimed'").fetchone()
             if claimed and claimed["project"] != project:
                 raise LedgerError("release the current review before switching focus")
-            packet = helm_context.packet(self, db, project)
+            packet = helm_context.packet(self, db, project, workflow, task)
+            previous = db.execute('SELECT * FROM context_views WHERE project=?', (project,)).fetchone() if modern else None
+            same_view = previous and (previous['owner'], previous['epoch'], previous['scope']) == (owner, epoch, encode(packet['scope']))
+            result = helm_context.delta_packet(json.loads(previous['packet']), packet) if delta and same_view else packet
+            if modern:
+                db.execute('INSERT INTO context_views VALUES(?,?,?,?,?) ON CONFLICT(project) DO UPDATE SET owner=excluded.owner,epoch=excluded.epoch,scope=excluded.scope,packet=excluded.packet', (project, owner, epoch, encode(packet['scope']), encode(packet)))
             db.execute("INSERT INTO focus VALUES(1,?,?,?,?,?) ON CONFLICT(slot) DO UPDATE SET project=excluded.project,fingerprint=excluded.fingerprint,owner=excluded.owner,epoch=excluded.epoch,loaded_at=excluded.loaded_at",
                 (project, packet["fingerprint"], owner, epoch, now()))
-            self._audit(db, "context.loaded", project, {"version": packet["context_version"], "fingerprint": packet["fingerprint"]})
-            return packet
+            if not active or active['fingerprint'] != packet['fingerprint'] or active['owner'] != owner or active['epoch'] != epoch:
+                self._audit(db, "context.loaded", project, {"version": packet["context_version"], "fingerprint": packet["fingerprint"]})
+            return result
 
     def checkpoint(self, project: str, summary: str, next_step: str, questions: list[str], owner: str, epoch: int) -> None:
         from helm_context import bounded_text
@@ -742,13 +784,15 @@ class Ledger:
         with self.connection() as db:
             for p in snapshot["projects"]:
                 tasks = [t for t in snapshot["tasks"] if t["project"] == p["id"]]
-                checkpoint = db.execute("SELECT summary,next_step,context_version FROM checkpoints WHERE project=? ORDER BY id DESC LIMIT 1", (p["id"],)).fetchone() if self._meta(db, "schema") == "2" else None
-                context = db.execute("SELECT version FROM contexts WHERE project=?", (p["id"],)).fetchone() if self._meta(db, "schema") == "2" else None
+                checkpoint = db.execute("SELECT summary,next_step,context_version FROM checkpoints WHERE project=? ORDER BY id DESC LIMIT 1", (p["id"],)).fetchone() if self._meta(db, "schema") != "1" else None
+                context = db.execute("SELECT version FROM contexts WHERE project=?", (p["id"],)).fetchone() if self._meta(db, "schema") != "1" else None
                 projects.append({"project": p["id"], "title": p["title"], "goal": p["goal"][:240],
                     "accepted": sum(t["effective_status"] == "accepted" for t in tasks), "total": len(tasks),
                     "review_backlog": sum(r["project"] == p["id"] for r in snapshot["reviews"]),
                     "context_version": context["version"] if context else None,
-                    "checkpoint": dict(checkpoint) if checkpoint else None})
+                    "checkpoint": dict(checkpoint) if checkpoint else None,
+                    "delivery": next(d for d in snapshot['deliveries'] if d['project'] == p['id']),
+                    "workflows": [w for w in snapshot['workflows'] if w['project'] == p['id']]})
         return {"supervisor": snapshot["supervisor"], "epoch": snapshot["epoch"], "sequence": snapshot["sequence"],
             "projects": projects, "reviews": snapshot["reviews"], "decisions": snapshot["decisions"],
             "pending_actions": snapshot["pending_actions"], "focus": snapshot["focus"]}
@@ -799,6 +843,8 @@ class Ledger:
         with self.connection() as db:
             task_views = []
             for row in db.execute("SELECT * FROM tasks ORDER BY project,workflow,id").fetchall():
+                if not helm_lifecycle.active(self, db, row['project'], row['workflow']):
+                    continue
                 spec = obj(json.loads(row["spec"]))
                 stale = not self._deps_valid(db, row)
                 task_views.append({"project": row["project"], "workflow": row["workflow"], "id": row["id"],
@@ -807,12 +853,14 @@ class Ledger:
                     "dependencies": spec["depends_on"], "run_state": row["run_state"], "thread": row["thread"],
                     "report": row["report"], "review": row["review"], "note": row["note"],
                     "observed_at": row["observed_at"], "updated_at": row["updated_at"], "ready_reason": self._ready_reason(db, row)})
-            modern = self._meta(db, "schema") == "2"
+            modern = self._meta(db, "schema") != "1"
             focus = db.execute("SELECT project,loaded_at FROM focus WHERE slot=1").fetchone() if modern else None
             return {"schema_version": int(self._meta(db, "schema")), "sequence": db.execute("SELECT coalesce(max(seq),0) FROM changes").fetchone()[0],
                 "generated_at": now(), "supervisor": self._meta(db, "supervisor"), "epoch": int(self._meta(db, "epoch")),
                 "active_limit": int(self._meta(db, "active_limit")), "review_limit": int(self._meta(db, "review_limit")),
                 "projects": [dict(row) for row in db.execute("SELECT * FROM projects ORDER BY id").fetchall()],
+                "deliveries": [helm_lifecycle.delivery(self, db, p['id']) for p in db.execute('SELECT id FROM projects ORDER BY id')],
+                "workflows": [dict(r) for r in db.execute('SELECT w.*, (SELECT count(*) FROM tasks t WHERE t.project=w.project AND t.workflow=w.workflow) AS task_count FROM workflow_state w ORDER BY project,workflow')] if self._meta(db, 'schema') == '3' else [],
                 "tasks": task_views, "reviews": [{k: v for k, v in row.items() if k not in {"token", "manifest"}} for row in helm_context.queue(self, db)],
                 "focus": dict(focus) if focus else None,
                 "decisions": [dict(r) for r in db.execute("SELECT * FROM decisions WHERE state='open' ORDER BY created_at")] if modern else [],

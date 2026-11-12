@@ -32,19 +32,22 @@ function render(data){
   const reviews=data.reviews.filter(r=>!selection||r.project===selection);
   const decisionTasks=new Set((data.decisions||[]).filter(d=>!selection||d.project===selection).map(d=>`${d.project}/${d.workflow}/${d.task}`));
   tasks.filter(t=>["waiting_input","waiting_approval"].includes(t.effective_status)).forEach(t=>decisionTasks.add(`${t.project}/${t.workflow}/${t.id}`));
-  const metrics=[[decisionTasks.size,"待输入 / 审批"],[reviews.length,"待审查 / 审查中"],[tasks.filter(t=>t.status==="running").length,"已派发执行"],[`${tasks.filter(t=>t.effective_status==="accepted").length} / ${tasks.length}`,"有效验收"]];
+  const deliveries=(data.deliveries||[]).filter(d=>!selection||d.project===selection);
+  const metrics=[[decisionTasks.size,"待输入 / 审批"],[reviews.length,"待审查 / 审查中"],[tasks.length?`${tasks.filter(t=>t.effective_status==="accepted").length} / ${tasks.length}`:"无活跃任务","当前任务验收"],[`${deliveries.filter(d=>d.state==="passed").length} / ${deliveries.length}`,"项目交付通过"]];
   byId("metrics").replaceChildren(...metrics.map(([count,label])=>{const n=el("div",undefined,"metric");n.append(el("strong",String(count)),el("span",label));return n;}));
   const projectNodes=[];
   for(const project of data.projects.filter(p=>!selection||p.id===selection)){
-    const own=tasks.filter(t=>t.project===project.id), fingerprint=JSON.stringify([project,own]), cached=projectCache.get(project.id);
+    const own=tasks.filter(t=>t.project===project.id), delivery=deliveries.find(d=>d.project===project.id), workflows=(data.workflows||[]).filter(w=>w.project===project.id), fingerprint=JSON.stringify([project,own,delivery,workflows]), cached=projectCache.get(project.id);
     if(cached&&cached.fingerprint===fingerprint){projectNodes.push(cached.node);continue;}
     const section=el("article",undefined,"project");section.dataset.project=project.id;section.dataset.renderCount=String((cached?cached.count:0)+1);
-    const head=el("div",undefined,"project-head");head.append(el("h2",project.title),el("span",`${own.filter(t=>t.effective_status==="accepted").length}/${own.length} 已验收`,"count"));
+    const head=el("div",undefined,"project-head");head.append(el("h2",project.title),el("span",delivery?.state==="passed"?"✓ 项目交付通过":delivery?.state==="pending"?"项目交付待完成":"尚未定义交付验收","count"));
     section.append(head,el("p",project.goal,"project-goal"));
-    if(own.some(t=>t.dependencies.length))section.append(dependencyGraph(own));
+    if(delivery){const gates=el("div",undefined,"delivery-gates");for(const gate of delivery.gates){const p=el("p",`${gate.state==="passed"?"✓":"○"} ${gate.title}：${gate.state==="passed"?"已通过":gate.state==="needs_recheck"?"证据变化，待复核":gate.state==="failed"?"未通过":"待验证"}。${gate.reason}`);p.dataset.gate=gate.id;p.dataset.state=gate.state;gates.append(p);}section.append(gates);}
+    for(const workflow of workflows.filter(w=>w.state==="archived")){section.append(el("p",`已归档 ${workflow.workflow} · ${workflow.task_count} 项历史任务 · ${workflow.summary}`,"archive-summary"));}
+    for(const name of new Set(own.map(t=>t.workflow))){const group=own.filter(t=>t.workflow===name);if(group.some(t=>t.dependencies.length)){section.append(el("h3",`工作流 ${name}`),dependencyGraph(group));}}
     for(const task of own){
       const row=el("div",undefined,"task");row.dataset.task=task.id;row.dataset.status=task.effective_status;
-      const heading=el("div",undefined,"task-head");heading.append(el("span",`${task.id} · ${task.title}`,"task-title"),el("span",labels[task.effective_status]||task.effective_status,`badge ${task.effective_status}`));row.append(heading);
+      const heading=el("div",undefined,"task-head");heading.append(el("span",`${task.workflow} / ${task.id} · ${task.title}`,"task-title"),el("span",labels[task.effective_status]||task.effective_status,`badge ${task.effective_status}`));row.append(heading);
       row.append(el("p",`第 ${task.revision} 版 · 最近进展 ${date(task.updated_at)}`,"task-meta"));
       if(task.dependencies.length)row.append(el("p","前置："+task.dependencies.map(d=>`${d.id} 第 ${d.version} 版`).join("、"),"dependency"));
       if(task.note)row.append(el("p",task.note,"task-note"));
@@ -64,6 +67,7 @@ function render(data){
   byId("reviews").replaceChildren(...(reviews.length?reviews.map((r,i)=>{const n=el("div",undefined,"queue-item"), p=data.projects.find(p=>p.id===r.project);n.append(el("strong",`${i+1}. ${p?p.title:r.project} · ${r.task}`),el("p",`${r.state==="claimed"?"主管审查中":"已收到，等待审查"} · 第 ${r.revision} 版`),el("p",`已等待 ${Math.floor(r.wait_seconds/60)} 分钟 · 可解锁 ${r.unlocks} 项`),evidenceLink({...r,id:r.task},"report","查看待审报告"));return n;}):[el("p","没有等待审查的报告。","empty")]));
   const attention=tasks.filter(t=>["waiting_input","waiting_approval","failed","needs_revision","needs_recheck"].includes(t.effective_status));
   const attentionNodes=attention.map(t=>{const n=el("div",undefined,"queue-item");n.append(el("strong",`${t.project} · ${t.id} · ${labels[t.effective_status]}`),el("p",t.note||"主管需核对后续处理。"));return n;});
+  for(const delivery of deliveries){for(const gate of delivery.gates.filter(g=>g.state!=="passed")){const n=el("div",undefined,"queue-item");n.append(el("strong",`${delivery.project} · ${gate.title}`),el("p",gate.reason));attentionNodes.push(n);}}
   for(const d of (data.decisions||[]).filter(d=>!selection||d.project===selection)){const n=el("div",undefined,"queue-item decision");n.dataset.decision=d.id;n.append(el("strong",`${d.project} · ${d.task} · 待决定`),el("p",d.question),el("p","影响："+d.impact));const options=el("ol");JSON.parse(d.options).forEach(o=>options.append(el("li",o)));n.append(options,el("p","请在主管对话中作决定；看板不提交批准。"));attentionNodes.unshift(n);}
   for(const change of data.recent_changes.filter(c=>c.kind==="event.rejected"&&(!selection||c.project===selection)).slice(0,3)){const info=JSON.parse(change.payload),n=el("div",undefined,"queue-item");n.append(el("strong",`${change.project} · 最近拒收记录`),el("p",`${info.file}：${info.reason}`));attentionNodes.push(n);}
   byId("attention").replaceChildren(...(attentionNodes.length?attentionNodes:[el("p","当前没有输入、修订或复核请求。","empty")]));
@@ -92,7 +96,7 @@ async function connect(){
   source.addEventListener("open",()=>{connectedAt=Date.now();connection(true);refresh();});
   source.addEventListener("change",event=>{const value=JSON.parse(event.data);pendingChanges.set(value.sequence,value);refresh();});
   source.addEventListener("reset",()=>{renderedSequence=-1;refresh();});
-  source.addEventListener("heartbeat",event=>{const state=JSON.parse(event.data);connection(true);collectorError=state.collector_error?"事件采集暂时失败，显示最后已保存状态："+state.collector_error:"";showError();if(readError||(latest?.reviews.length&&Date.now()-lastReadAt>=15000))refresh();});
+  source.addEventListener("heartbeat",event=>{const state=JSON.parse(event.data);connection(true);collectorError=state.collector_error?"事件采集暂时失败，显示最后已保存状态："+state.collector_error:"";showError();if(readError||Date.now()-lastReadAt>=15000)refresh();});
   source.addEventListener("error",()=>connection(false));
 }
 byId("project-filter").addEventListener("change",()=>{if(latest)render(latest);});
