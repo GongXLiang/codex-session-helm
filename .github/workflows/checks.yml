@@ -16,3 +16,4 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m unittest discover -s tests -v
       - run: python scripts/helm.py check examples/demo-state.json --check-files
+      - run: node --check assets/dashboard/dashboard.js

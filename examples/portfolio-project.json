@@ -1,0 +1,19 @@
+{
+  "id": "data",
+  "title": "数据核对示例",
+  "root": "C:/replace/isolated-project",
+  "host": "local",
+  "goal": "核对输入数据并产出可追溯的汇总",
+  "plan": "plan.md",
+  "workflow": {
+    "schema_version": 1,
+    "workflow_id": "main",
+    "updated_at": "2026-11-11T00:00:00+00:00",
+    "concurrency_limit": 2,
+    "case_sensitive_paths": false,
+    "tasks": [
+      {"id": "T01", "title": "核对并汇总数据", "version": 1, "status": "planned", "depends_on": [], "workspace": "local:replace-project-root", "write_paths": ["output/T01", "reports/T01"]},
+      {"id": "T02", "title": "依据已验收结果撰写摘要", "version": 1, "status": "planned", "depends_on": [{"id": "T01", "version": 1}], "workspace": "local:replace-project-root", "write_paths": ["output/T02", "reports/T02"]}
+    ]
+  }
+}

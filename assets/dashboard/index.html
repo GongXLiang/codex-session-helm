@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SessionHelm · 项目看板</title>
+  <link rel="stylesheet" href="/dashboard.css">
+  <script src="/dashboard.js" defer></script>
+</head>
+<body>
+  <header><div><p class="eyebrow">SESSIONHELM</p><h1>项目看板</h1></div><span id="connection" role="status">正在连接</span></header>
+  <p class="intro">在一个地方查看各项目的执行、回报和验收。只有主管验收通过，任务才会打勾。</p>
+  <p id="focus" class="intro"></p>
+  <div id="error" role="alert" hidden></div>
+  <section id="metrics" aria-label="任务汇总"></section>
+  <div class="toolbar"><label for="project-filter">查看项目</label><select id="project-filter"><option value="">全部项目</option></select><span id="freshness"></span></div>
+  <main><section id="projects" aria-label="各项目进展"></section><aside><h2>审查队列</h2><div id="reviews"></div><h2>待处理事项</h2><div id="attention"></div></aside></main>
+  <footer>此看板只读。状态来自本地任务账本；页面连接正常不代表执行会话仍在运行。<br><span id="sequence"></span><br><span id="latency"></span></footer>
+  <pre id="latency-samples" hidden>[]</pre>
+</body>
+</html>

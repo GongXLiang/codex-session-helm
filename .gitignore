@@ -26,3 +26,10 @@ Desktop.ini
 __pycache__/
 *.py[cod]
 .ruff_cache/
+
+# Per-machine managed workflows; keep these in their projects, never in the skill
+.session-helm/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm

@@ -1,0 +1,10 @@
+{
+  "project": "data",
+  "goal": "核对输入并形成可追溯汇总",
+  "rules": ["缺失值单独计数，不按零处理"],
+  "definitions": ["有效行表示日期和金额均通过输入校验，不等于业务凭证已审核"],
+  "decisions": ["先验收 T01 的输入核对，再执行 T02 汇总"],
+  "open_questions": [],
+  "next_step": "核对 T01 的实际输入及边界样例",
+  "sources": ["plan.md", "cards/T01.md"]
+}
